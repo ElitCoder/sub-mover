@@ -157,4 +157,5 @@ int main(int argc, char *argv[])
 
     cout << "\nCopying subtitles...\n";
     copy_subtitles(mapped);
+    return 0;
 }
