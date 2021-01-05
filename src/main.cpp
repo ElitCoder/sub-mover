@@ -74,7 +74,7 @@ EpisodeList populate_episodes(FileList files)
         vector<string> matches;
         // Regex match for season and episode information
         if (!string_match(file, REGEX_EPISODE, matches)) {
-            // Not a episode file
+            // Not an episode file
             continue;
         }
         // Remove first match since it's the full regex match
