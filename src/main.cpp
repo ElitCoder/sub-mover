@@ -160,12 +160,28 @@ int main(int argc, char *argv[])
     bool overwrite = (argc >= 4) ? (string(argv[3]) == "overwrite") : false;
 
     cout << "Finding subtitle files...\n";
-    auto subs = populate_episodes(get_files_in_folder(argv[1], SUBTITLE_FORMATS));
+    auto sub_files = get_files_in_folder(argv[1], SUBTITLE_FORMATS);
     cout << "\nFinding video files...\n";
-    auto vids = populate_episodes(get_files_in_folder(argv[2], VIDEO_FORMATS));
+    auto video_files = get_files_in_folder(argv[2], VIDEO_FORMATS);
 
-    cout << "\nMapping videos <-> subtitles...\n";
-    auto mapped = map_episodes(vids, subs);
+    cout << "\nResolving subtitle files...\n";
+    auto subs = populate_episodes(sub_files);
+    cout << "\nResolving video files...\n";
+    auto vids = populate_episodes(video_files);
+
+    EpisodeMap mapped;
+    // Handle the case where there is only a video and a subtitle file and both
+    // of them are missing episode information. It's probably a movie.
+    if (subs.empty() && vids.empty() && (sub_files.size() == 1) && (video_files.size() == 1)) {
+        cout << "\nOnly found one subtitle and one video file, mapping them together\n";
+        Episode episode;
+        episode.path = sub_files.front();
+        mapped[video_files.front()] = episode;
+    } else {
+        // Normal episode mapping
+        cout << "\nMapping videos <-> subtitles...\n";
+        mapped = map_episodes(vids, subs);
+    }
 
     cout << "\nCopying subtitles...\n";
     copy_subtitles(mapped, overwrite);
