@@ -1,0 +1,5 @@
+sources = [
+    'main.cpp'
+]
+
+executable('sub-mover', sources)
