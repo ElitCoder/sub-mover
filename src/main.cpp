@@ -27,7 +27,7 @@ static const string SUBTITLE_FORMATS = ".srt";
 
 void print_help(const string &program)
 {
-    cout << "Usage: " << program << " <subdir> <videodir>\n";
+    cout << "Usage: " << program << " <subdir> <videodir> [overwrite]\n";
 }
 
 bool string_match(const string &str, const string &match, vector<string> &matches)
@@ -119,8 +119,10 @@ EpisodeMap map_episodes(EpisodeList vids, EpisodeList subs)
     return map;
 }
 
-void copy_subtitles(EpisodeMap map)
+void copy_subtitles(EpisodeMap map, bool overwrite)
 {
+    auto copy_options = filesystem::copy_options::update_existing;
+
     for (auto const &[video_path, sub] : map) {
         cout << "Video file: " << video_path << endl;
         cout << "Subtitle file: " << sub.path << endl;
@@ -131,9 +133,17 @@ void copy_subtitles(EpisodeMap map)
         auto new_sub_path = path + "/" + filename + extension;
         cout << "Copying subtitle " << sub.path << " to " << new_sub_path << endl;
         try {
-            filesystem::copy(sub.path, new_sub_path);
+            if (overwrite) {
+                filesystem::copy(sub.path, new_sub_path, copy_options);
+            } else {
+                filesystem::copy(sub.path, new_sub_path);
+            }
         } catch (...) {
-            cout << "Failed to copy subtitle, file already exists?\n";
+            if (overwrite) {
+                cout << "Failed to copy subtitle, permission denied?\n";
+            } else {
+                cout << "Failed to copy subtitle, file already exists?\n";
+            }
         }
     }
 
@@ -147,6 +157,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    bool overwrite = (argc >= 4) ? (string(argv[3]) == "overwrite") : false;
+
     cout << "Finding subtitle files...\n";
     auto subs = populate_episodes(get_files_in_folder(argv[1], SUBTITLE_FORMATS));
     cout << "\nFinding video files...\n";
@@ -156,6 +168,6 @@ int main(int argc, char *argv[])
     auto mapped = map_episodes(vids, subs);
 
     cout << "\nCopying subtitles...\n";
-    copy_subtitles(mapped);
+    copy_subtitles(mapped, overwrite);
     return 0;
 }
