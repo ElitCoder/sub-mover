@@ -2,4 +2,4 @@ sources = [
     'main.cpp'
 ]
 
-executable('sub-mover', sources)
+executable('sub-mover', sources, install : true)
