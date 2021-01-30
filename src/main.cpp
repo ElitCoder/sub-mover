@@ -20,6 +20,8 @@ using EpisodeMap = map<string, Episode>;
 
 // Regex match for e.g. "S01E01"
 static const string REGEX_EPISODE = "[sS](\\d{1,2})[eE](\\d{1,2})";
+// Regex match for e.g. "0101 - Episode (...)"
+static const string REGEX_EPISODE_FALLBACK = "(\\d{2})(\\d{2})";
 // Video formats
 static const string VIDEO_FORMATS = ".mkv|.mp4|.avi";
 // Subtitle formats
@@ -73,7 +75,8 @@ EpisodeList populate_episodes(FileList files)
     for (auto &file : files) {
         vector<string> matches;
         // Regex match for season and episode information
-        if (!string_match(file, REGEX_EPISODE, matches)) {
+        if (!string_match(file, REGEX_EPISODE, matches) &&
+            !string_match(file, REGEX_EPISODE_FALLBACK, matches)) {
             // Not an episode file
             continue;
         }
