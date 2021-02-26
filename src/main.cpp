@@ -124,8 +124,6 @@ EpisodeMap map_episodes(EpisodeList vids, EpisodeList subs)
 
 void copy_subtitles(EpisodeMap map, bool overwrite)
 {
-    auto copy_options = filesystem::copy_options::update_existing;
-
     for (auto const &[video_path, sub] : map) {
         cout << "Video file: " << video_path << endl;
         cout << "Subtitle file: " << sub.path << endl;
@@ -137,10 +135,10 @@ void copy_subtitles(EpisodeMap map, bool overwrite)
         cout << "Copying subtitle " << sub.path << " to " << new_sub_path << endl;
         try {
             if (overwrite) {
-                filesystem::copy(sub.path, new_sub_path, copy_options);
-            } else {
-                filesystem::copy(sub.path, new_sub_path);
+                // Remove already existing file before copying
+                filesystem::remove(new_sub_path);
             }
+            filesystem::copy(sub.path, new_sub_path);
         } catch (...) {
             if (overwrite) {
                 cout << "Failed to copy subtitle, permission denied?\n";
