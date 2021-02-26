@@ -22,6 +22,10 @@ using EpisodeMap = map<string, Episode>;
 static const string REGEX_EPISODE = "[sS](\\d{1,2})[eE](\\d{1,2})";
 // Regex match for e.g. "0101 - Episode (...)"
 static const string REGEX_EPISODE_FALLBACK = "(\\d{2})(\\d{2})";
+// Regex match for e.g. "1x01 - Episode (...)"
+static const string REGEX_EPISODE_FALLBACK_2 = "(\\d{1,2})x(\\d{1,2})";
+// Regex match for e.g. "01 - Episode (...)"
+static const string REGEX_EPISODE_FALLBACK_3 = "(\\d{2}) -";
 // Video formats
 static const string VIDEO_FORMATS = ".mkv|.mp4|.avi";
 // Subtitle formats
@@ -76,18 +80,30 @@ EpisodeList populate_episodes(FileList files)
         vector<string> matches;
         // Regex match for season and episode information
         if (!string_match(file, REGEX_EPISODE, matches) &&
-            !string_match(file, REGEX_EPISODE_FALLBACK, matches)) {
+            !string_match(file, REGEX_EPISODE_FALLBACK, matches) &&
+            !string_match(file, REGEX_EPISODE_FALLBACK_2, matches) &&
+            !string_match(file, REGEX_EPISODE_FALLBACK_3, matches)) {
             // Not an episode file
             continue;
         }
         // Remove first match since it's the full regex match
         matches.erase(matches.begin());
-        // [0] = season
-        // [1] = episode
+        // Either:
+        //   [0] = season
+        //   [1] = episode
+        // or
+        //   [0] = episode
+        // depending on the regex match.
         Episode episode;
         episode.path = file;
-        episode.season = stoi(matches.at(0));
-        episode.episode = stoi(matches.at(1));
+        if (matches.size() == 1) {
+            episode.season = -1; // Auto-pick from matching episode file
+            // [0] = episode
+            episode.episode = stoi(matches.at(0));
+        } else {
+            episode.season = stoi(matches.at(0));
+            episode.episode = stoi(matches.at(1));
+        }
         episodes.push_back(episode);
     }
 
@@ -113,7 +129,11 @@ EpisodeMap map_episodes(EpisodeList vids, EpisodeList subs)
 
     for (auto &video : vids) {
         for (auto &sub : subs) {
-            if (video.season == sub.season && video.episode == sub.episode) {
+            if (video.episode == sub.episode) {
+                if (video.season >= 0 && sub.season >= 0 &&
+                    video.season != sub.season) {
+                    continue;
+                }
                 map[video.path] = sub;
             }
         }
