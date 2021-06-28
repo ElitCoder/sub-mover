@@ -26,6 +26,8 @@ static const string REGEX_EPISODE_FALLBACK = "(\\d{2})(\\d{2})";
 static const string REGEX_EPISODE_FALLBACK_2 = "(\\d{1,2})x(\\d{1,2})";
 // Regex match for e.g. "01 - Episode (...)"
 static const string REGEX_EPISODE_FALLBACK_3 = "(\\d{2}) -";
+// Regex match for e.g. ".101-"
+static const string REGEX_EPISODE_FALLBACK_4 = "\\.(\\d{1})(\\d{2})\\-";
 // Video formats
 static const string VIDEO_FORMATS = ".mkv|.mp4|.avi";
 // Subtitle formats
@@ -82,7 +84,8 @@ EpisodeList populate_episodes(FileList files)
         if (!string_match(file, REGEX_EPISODE, matches) &&
             !string_match(file, REGEX_EPISODE_FALLBACK, matches) &&
             !string_match(file, REGEX_EPISODE_FALLBACK_2, matches) &&
-            !string_match(file, REGEX_EPISODE_FALLBACK_3, matches)) {
+            !string_match(file, REGEX_EPISODE_FALLBACK_3, matches) &&
+            !string_match(file, REGEX_EPISODE_FALLBACK_4, matches)) {
             // Not an episode file
             continue;
         }
